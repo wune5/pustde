@@ -2,6 +2,7 @@ name: Build the flutter version of the RustDesk
 
 on:
   workflow_call:
+  workflow_dispatch:
     inputs:
       upload-artifact:
         type: boolean
@@ -1109,7 +1110,6 @@ jobs:
   build-rustdesk-android-universal:
     needs: [build-rustdesk-android]
     name: build rustdesk android universal apk
-    if: ${{ inputs.upload-artifact }}
     runs-on: ubuntu-24.04
     env:
       reltype: release
