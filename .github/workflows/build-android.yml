@@ -3,6 +3,9 @@ name: Build Android APK
 on:
   workflow_dispatch:
 
+env:
+  VCPKG_COMMIT_ID: 2023.04.15
+
 jobs:
   build-android:
     runs-on: ubuntu-24.04
@@ -37,6 +40,15 @@ jobs:
 
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
+
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg /opt/vcpkg
+          cd /opt/vcpkg
+          git checkout $VCPKG_COMMIT_ID
+          ./bootstrap-vcpkg.sh
+          ./vcpkg install libvpx libyuv opus aom
+          echo "VCPKG_ROOT=/opt/vcpkg" >> $GITHUB_ENV
 
       - name: Build native library
         run: bash flutter/ndk_arm64.sh
