@@ -1,0 +1,46 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake curl git g++ libclang-dev \
+               libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+               libpulse-dev libxcb-randr0-dev libxcb-shape0-dev \
+               libxcb-xfixes0-dev libxdo-dev libxfixes-dev nasm ninja-build \
+               openjdk-17-jdk-headless pkg-config
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.22.0
+
+      - uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27b
+          add-to-path: true
+
+      - name: Build Rust
+        run: |
+          cd flutter
+          bash ndk_arm64.sh
+
+      - name: Build APK
+        run: |
+          cd flutter
+          flutter build apk --release --target-platform android-arm64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mingremote-custom.apk
+          path: flutter/build/app/outputs/flutter-apk/app-release.apk
