@@ -39,9 +39,7 @@ jobs:
         run: cargo install cargo-ndk
 
       - name: Build native library
-        run: |
-          cd flutter
-          run: bash flutter/ndk_arm64.sh
+        run: bash flutter/ndk_arm64.sh
 
       - name: Build APK
         run: |
