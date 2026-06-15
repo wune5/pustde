@@ -28,7 +28,8 @@ jobs:
           channel: stable
           flutter-version: 3.22.3
 
-      - uses: nttld/setup-ndk@v1
+      - id: setup-ndk
+        uses: nttld/setup-ndk@v1
         with:
           ndk-version: r27b
           add-to-path: true
@@ -40,7 +41,8 @@ jobs:
 
       - name: Install tools
         run: |
-          cargo install cargo-ndk
+          rustup target add aarch64-linux-android
+          cargo install cargo-ndk --locked
           cargo install cargo-expand --version 1.0.95 --locked
           cargo install flutter_rust_bridge_codegen --version 1.80.1 --features "uuid" --locked
 
@@ -54,6 +56,9 @@ jobs:
           echo "VCPKG_ROOT=/opt/vcpkg" >> $GITHUB_ENV
 
       - name: Generate bridge code
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           cd flutter && sed -i 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && cd ..
           flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs \
@@ -62,6 +67,9 @@ jobs:
           cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
 
       - name: Build native library
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: bash flutter/ndk_arm64.sh
 
       - name: Build APK
