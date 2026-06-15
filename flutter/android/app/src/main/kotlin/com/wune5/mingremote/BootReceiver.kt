@@ -1,4 +1,4 @@
-package com.carriez.flutter_hbb
+package com.wune5.mingremote
 
 import android.Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
 import android.Manifest.permission.SYSTEM_ALERT_WINDOW
