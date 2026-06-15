@@ -50,6 +50,12 @@ jobs:
           ./vcpkg install libvpx libyuv opus aom ffmpeg --triplet arm64-android
           echo "VCPKG_ROOT=/opt/vcpkg" >> $GITHUB_ENV
 
+      - name: Generate bridge code
+        run: |
+          cargo install flutter_rust_bridge_codegen@1.80.1
+          cd flutter
+          flutter_rust_bridge_codegen generate
+
       - name: Build native library
         run: bash flutter/ndk_arm64.sh
 
