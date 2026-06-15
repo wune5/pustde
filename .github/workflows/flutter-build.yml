@@ -144,21 +144,7 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          case ${{ matrix.job.target }} in
-            aarch64-linux-android)
-              ANDROID_TARGET=arm64-v8a
-            ;;
-            armv7-linux-androideabi)
-              ANDROID_TARGET=armeabi-v7a
-            ;;
-            x86_64-linux-android)
-              ANDROID_TARGET=x86_64
-            ;;
-            i686-linux-android)
-              ANDROID_TARGET=x86
-            ;;
-          esac
-          if ! ./flutter/build_android_deps.sh "${ANDROID_TARGET}"; then
+          if ! ./flutter/build_android_deps.sh "arm64-v8a"; then
             find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
               echo "$_1:"
               echo "======"
@@ -194,28 +180,9 @@ jobs:
         run: |
           rustup target add ${{ matrix.job.target }}
           cargo install cargo-ndk --version ${{ env.CARGO_NDK_VERSION }} --locked
-          case ${{ matrix.job.target }} in
-            aarch64-linux-android)
-              ./flutter/ndk_arm64.sh
-              mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
-            ;;
-            armv7-linux-androideabi)
-              ./flutter/ndk_arm.sh
-              mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
-            ;;
-            x86_64-linux-android)
-              ./flutter/ndk_x64.sh
-              mkdir -p ./flutter/android/app/src/main/jniLibs/x86_64
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86_64/librustdesk.so
-            ;;
-            i686-linux-android)
-              ./flutter/ndk_x86.sh
-              mkdir -p ./flutter/android/app/src/main/jniLibs/x86
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86/librustdesk.so
-            ;;
-          esac
+          ./flutter/ndk_arm64.sh
+          mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
+          cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
 
       - name: Upload Rustdesk library to Artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -227,44 +194,18 @@ jobs:
         shell: bash
         env:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
           sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" ./flutter/android/gradle.properties
           sed -i "s/signingConfigs.release/signingConfigs.debug/g" ./flutter/android/app/build.gradle
-          case ${{ matrix.job.target }} in
-            aarch64-linux-android)
-              mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
-              cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
-              pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm64 --split-per-abi
-              mv build/app/outputs/flutter-apk/app-arm64-v8a-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
-            ;;
-            armv7-linux-androideabi)
-              mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
-              cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
-              pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm --split-per-abi
-              mv build/app/outputs/flutter-apk/app-armeabi-v7a-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
-            ;;
-            x86_64-linux-android)
-              mkdir -p ./flutter/android/app/src/main/jniLibs/x86_64
-              cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/x86_64/
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86_64/librustdesk.so
-              pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-x64 --split-per-abi
-              mv build/app/outputs/flutter-apk/app-x86_64-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
-            ;;
-            i686-linux-android)
-              mkdir -p ./flutter/android/app/src/main/jniLibs/x86
-              cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/x86/
-              cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/x86/librustdesk.so
-              pushd flutter
-              flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-x86 --split-per-abi
-              mv build/app/outputs/flutter-apk/app-x86-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
-            ;;
-          esac
+          mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
+          cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/
+          cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
+          pushd flutter
+          flutter build apk "--${{ matrix.job.reltype }}" --target-platform android-arm64 --split-per-abi
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-${{ matrix.job.reltype }}.apk ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk
           popd
           mkdir -p signed-apk; pushd signed-apk
           mv ../rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.apk .
@@ -296,20 +237,3 @@ jobs:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
           path: ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
-      - name: Publish signed apk package
-        if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
-
-      - name: Publish unsigned apk package
-        if: env.ANDROID_SIGNING_KEY == null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            signed-apk/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
