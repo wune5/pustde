@@ -30,7 +30,15 @@ jobs:
           ndk-version: r27b
           add-to-path: true
 
-      - name: Build Rust
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build native library
         run: |
           cd flutter
           bash ndk_arm64.sh
@@ -42,5 +50,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mingremote-custom.apk
+          name: rustdesk-custom.apk
           path: flutter/build/app/outputs/flutter-apk/app-release.apk
