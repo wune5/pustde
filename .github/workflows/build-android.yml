@@ -41,7 +41,7 @@ jobs:
       - name: Build native library
         run: |
           cd flutter
-          bash ndk_arm64.sh
+          run: bash flutter/ndk_arm64.sh
 
       - name: Build APK
         run: |
