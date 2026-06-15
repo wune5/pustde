@@ -1,4 +1,4 @@
-package com.carriez.flutter_hbb
+package com.wune5.mingremote
 
 import android.Manifest.permission.*
 import android.annotation.SuppressLint
