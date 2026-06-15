@@ -47,7 +47,7 @@ jobs:
           cd /opt/vcpkg
           git checkout $VCPKG_COMMIT_ID
           ./bootstrap-vcpkg.sh
-          ./vcpkg install libvpx libyuv opus aom
+          ./vcpkg install libvpx libyuv opus aom ffmpeg --triplet arm64-android
           echo "VCPKG_ROOT=/opt/vcpkg" >> $GITHUB_ENV
 
       - name: Build native library
